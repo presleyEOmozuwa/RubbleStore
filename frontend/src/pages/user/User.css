@@ -1,0 +1,65 @@
+.sect input, textarea, select{
+    box-shadow: none !important;
+    border: 1px solid lightslategray !important;
+}
+.sect label{
+    font-size: 16px;
+}
+.sect p{
+    margin: 0;
+}
+
+#wrapper-security {
+    width: 90%;
+    min-height: 400px;
+    margin: auto;
+}
+
+#login-security {
+    width: 100%;
+    min-height: 100px;
+    /* background-color: lightgrey; */
+    margin-top: 50px;
+}
+
+#login-security #main-inner {
+    width: 60%;
+    min-height: 100px;
+    /* background-color: aqua; */
+    margin: auto;
+}
+
+#login-security #main-inner h2 {
+    text-align: center;
+}
+
+#login-security #main-inner .inner {
+    width: 100%;
+    min-height: 100px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin-top: 20px;
+}
+
+#login-security #main-inner .inner button {
+    font-size: 18px;
+    padding: 5px 30px;
+    text-align: right;
+    background-color: blue;
+    cursor: pointer;
+    border-style: none;
+    color: white;
+    font-weight: bold;
+    border-radius: 5px;
+    font-family: monospace;
+}
+
+
+#login-security #main-inner .inner .apply span, p{
+   font-size: 18px;
+   text-align: justify;
+}

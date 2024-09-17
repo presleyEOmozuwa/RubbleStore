@@ -1,0 +1,4 @@
+.sect input, textarea{
+    box-shadow: none !important;
+    border: 1px solid lightslategray !important;
+}

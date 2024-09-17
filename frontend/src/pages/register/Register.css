@@ -1,0 +1,18 @@
+.sect input, textarea{
+    box-shadow: none !important;
+    border: 1px solid lightslategray !important;
+}
+.sect label{
+    font-size: 16px;
+}
+.sect p{
+    margin: 0;
+}
+
+/* .register-section {
+    background-image: url("https://res.cloudinary.com/doqxwwvpo/image/upload/v1718657132/building-gfa9fc4835_1920_pbzg65.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+} */

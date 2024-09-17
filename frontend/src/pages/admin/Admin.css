@@ -1,0 +1,27 @@
+/* .admin-section{
+    background-image: url('../../images/charles-forerunner-3fPXt37X6UQ-unsplash.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-attachment: fixed;
+} */
+
+.admin {
+    margin-top: 120px;
+    letter-spacing: 0.2em;
+}
+
+a{
+    text-decoration: none;
+}
+
+.sect input, textarea, select{
+    box-shadow: none !important;
+    border: 1px solid lightslategray !important;
+}
+.sect label{
+    font-size: 16px;
+}
+.sect p{
+    margin: 0;
+}

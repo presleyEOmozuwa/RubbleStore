@@ -1,0 +1,22 @@
+
+.sect{
+    /* font-family: sans-serif; */
+    font-size: 17px;
+}
+
+/* .container h1, h2, h3, p{
+    margin: 0;
+    padding: 0;
+} */
+
+.sect input, textarea, select{
+    box-shadow: none !important;
+    border: 1px solid lightslategray !important;
+}
+.sect label{
+    font-size: 16px;
+}
+.sect p{
+    margin: 0;
+    font-size: 16px;
+}

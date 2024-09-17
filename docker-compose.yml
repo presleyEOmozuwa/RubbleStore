@@ -1,0 +1,36 @@
+services:
+  nginx_proxy:
+      container_name: ngnix_server
+      image: rubblestech3400/ngnix
+      build:
+        context: ./nginx
+        dockerfile: Dockerfile
+      restart: always
+      ports:
+        - 80:80      
+      depends_on:
+        - backend
+  
+  frontend:
+    container_name: react_server
+    image: rubblestech3400/reactapp
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    env_file: ./frontend/.env
+    volumes:
+      - /app/node_modules
+      - ./frontend:/app
+
+  backend:
+    container_name: node_server
+    image: rubblestech3400/backend
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: always
+    env_file: ./backend/.env
+    volumes:
+      - /app/node_modules
+      - ./backend:/app 
