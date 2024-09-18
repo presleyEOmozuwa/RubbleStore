@@ -1,1 +1,2 @@
 This is the registration source code
+Sign up button fixed
