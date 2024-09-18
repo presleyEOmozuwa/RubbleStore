@@ -1,11 +1,12 @@
 name: Terraform Staging
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - main
   
 jobs:
   terraform-staging:
-    if: ${{ github.event.issue.pull_request }}
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -13,7 +14,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        ref: refs/pull/${{ github.event.issue.number }}/merge
+        ref: main
 
     - name: terraform apply - VPC
       uses: dflook/terraform-apply@v1
