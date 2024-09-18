@@ -1,0 +1,16 @@
+services:
+  frontend:
+    container_name: react_server
+    image: rubblestech3400/reactapp
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    env_file: ./frontend/.env
+
+  backend:
+    container_name: node_server
+    image: rubblestech3400/nodeapp
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    env_file: ./backend/.env
