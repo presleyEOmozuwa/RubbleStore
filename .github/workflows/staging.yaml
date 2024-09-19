@@ -1,12 +1,8 @@
-name: Terraform Staging
-
+name: Staging CI
 on:
-  push:
-    branches:
-      - main
-  
+  workflow_dispatch:
 jobs:
-  terraform-staging:
+  staging:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

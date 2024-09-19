@@ -1,4 +1,4 @@
-name: Dockerization
+name: Dev CI
 on:
   push:
     branches:
