@@ -25,7 +25,7 @@ services:
 
   backend:
     container_name: node_server
-    image: rubblestech3400/backend
+    image: rubblestech3400/nodeapp
     build:
       context: ./backend
       dockerfile: Dockerfile
