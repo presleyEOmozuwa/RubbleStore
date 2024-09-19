@@ -1,51 +1,63 @@
 name: Staging CI
 on:
   workflow_dispatch:
+
 jobs:
-  staging:
+  terraform-deploy:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        ref: main
+      uses: actions/checkout@v3
 
-    - name: terraform apply - VPC
-      uses: dflook/terraform-apply@v1
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
       with:
-        path: ./infra/modules/vpc
-        auto_approve: true
+        terraform_version: 1.9.1
 
-    - name: terraform apply - EKS
-      uses: dflook/terraform-apply@v1
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
       with:
-        path: ./infra/modules/eks
-        auto_approve: true        
-    
-    - name: Build & push Docker image to AWS ECR for react app
-      uses: mr-smithers-excellent/docker-build-push@v6
-      with:
-        image: ${{ secrets.AWS_ECR_REGISTRY }}/react_app
-        tags: latest
-        registry: ${{ secrets.AWS_ECR_REGISTRY }}
-        dockerfile: ./docker-compose.ci.yml
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
 
-    - name: Build & push Docker image to AWS ECR for node app
-      uses: mr-smithers-excellent/docker-build-push@v6
-      with:
-        image: ${{ secrets.AWS_ECR_REGISTRY }}/node_app
-        tags: latest
-        registry: ${{ secrets.AWS_ECR_REGISTRY }}
-        dockerfile: ./docker-compose.ci.yml
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-    
-    - name: terraform apply - K8S
-      uses: dflook/terraform-apply@v1
-      with:
-        path: ./infra/modules/k8s
-        auto_approve: true 
+    # Apply Terraform configurations
+    - name: Terraform Init - VPC
+      working-directory: ./infra/modules/vpc
+      run: terraform init
+
+    - name: Terraform Apply - VPC
+      working-directory: ./infra/modules/vpc
+      run: terraform apply -auto-approve
+
+    - name: Terraform Init - EKS
+      working-directory: ./infra/modules/eks
+      run: terraform init
+
+    - name: Terraform Apply - EKS
+      working-directory: ./infra/modules/eks
+      run: terraform apply -auto-approve
+
+     # Build and push Docker images to ECR
+    - name: Log in to Amazon ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+
+    - name: Build, and push frontend Docker image
+      run: |
+        docker build -t react_app ./frontend
+        docker tag react_app:latest ${{ secrets.AWS_ECR_REGISTRY }}/react_app:latest
+        docker push ${{ secrets.AWS_ECR_REGISTRY }}/react_app:latest
+
+    - name: Build, and push backend Docker image
+      run: |
+        docker build -t node_app ./backend
+        docker tag node_app:latest ${{ secrets.AWS_ECR_REGISTRY }}/node_app:latest
+        docker push ${{ secrets.AWS_ECR_REGISTRY }}/node_app:latest
+
+    - name: Terraform Init - K8S
+      working-directory: ./infra/modules/k8s
+      run: terraform init
+
+    - name: Terraform Apply - K8S
+      working-directory: ./infra/modules/k8s
+      run: terraform apply -auto-approve
