@@ -1,0 +1,2 @@
+This is a login source code for frontend interface.
+It is a way the server gets users' credentials and validate their identities.
