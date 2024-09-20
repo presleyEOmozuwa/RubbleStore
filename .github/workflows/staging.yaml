@@ -39,7 +39,7 @@ jobs:
     - name: Build & push Docker image to AWS ECR for react app
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
-        image: ${{ secrets.AWS_ECR_REGISTRY }}/react_app
+        image: react_app
         tags: latest
         registry: ${{ secrets.AWS_ECR_REGISTRY }}
         dockerfile: ./frontend/Dockerfile
@@ -49,7 +49,7 @@ jobs:
     - name: Build & push Docker image to AWS ECR for node app
       uses: mr-smithers-excellent/docker-build-push@v6
       with:
-        image: ${{ secrets.AWS_ECR_REGISTRY }}/node_app
+        image: node_app
         tags: latest
         registry: ${{ secrets.AWS_ECR_REGISTRY }}
         dockerfile: ./backend/Dockerfile
