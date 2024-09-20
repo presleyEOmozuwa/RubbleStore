@@ -23,19 +23,19 @@ jobs:
 
     # Apply Terraform configurations
     - name: Terraform Init - VPC
-      working-directory: ./infra/modules/vpc
+      working-directory: ./infra/modules/vpc/
       run: terraform init
 
     - name: Terraform Apply - VPC
-      working-directory: ./infra/modules/vpc
+      working-directory: ./infra/modules/vpc/
       run: terraform apply -auto-approve
 
     - name: Terraform Init - EKS
-      working-directory: ./infra/modules/eks
+      working-directory: ./infra/modules/eks/
       run: terraform init
 
     - name: Terraform Apply - EKS
-      working-directory: ./infra/modules/eks
+      working-directory: ./infra/modules/eks/
       run: terraform apply -auto-approve
 
      # Build and push Docker images to ECR
@@ -55,9 +55,9 @@ jobs:
         docker push ${{ secrets.AWS_ECR_REGISTRY }}/node_app:latest
 
     - name: Terraform Init - K8S
-      working-directory: ./infra/modules/k8s
+      working-directory: ./infra/modules/k8s/
       run: terraform init
 
     - name: Terraform Apply - K8S
-      working-directory: ./infra/modules/k8s
+      working-directory: ./infra/modules/k8s/
       run: terraform apply -auto-approve
