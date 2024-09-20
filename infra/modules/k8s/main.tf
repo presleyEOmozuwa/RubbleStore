@@ -138,7 +138,7 @@ resource "kubernetes_service" "node_app" {
 }
 
 // INGRESS ROUTING RULES
-resource "kubernetes_ingress" "app_ingress" {
+resource "kubernetes_ingress_v1" "app_ingress" {
   metadata {
     name = "app-ingress"
     namespace = "default"
@@ -155,16 +155,24 @@ resource "kubernetes_ingress" "app_ingress" {
         path {
           path = "/api*"
           backend {
-            service_name = kubernetes_service.node_app.metadata[0].name
-            service_port = 5000
+            service {
+              name = kubernetes_service.node_app.metadata.0.name
+              port {
+                number = kubernetes_service.node_app.spec.0.port.0.port
+              }
+            }
           }
         }
 
         path {
           path = "/*"
           backend {
-            service_name = kubernetes_service.react_app.metadata[0].name
-            service_port = 3000
+            service {
+              name = kubernetes_service.react_app.metadata.0.name
+              port {
+                number = kubernetes_service.react_app.spec.0.port.0.port
+              }
+            }
           }
         }
       }
