@@ -42,7 +42,7 @@ jobs:
         image: ${{ secrets.AWS_ECR_REGISTRY }}/react_app
         tags: latest
         registry: ${{ secrets.AWS_ECR_REGISTRY }}
-        dockerfile: ./docker-compose.ci.yml
+        dockerfile: ./frontend/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
@@ -52,7 +52,7 @@ jobs:
         image: ${{ secrets.AWS_ECR_REGISTRY }}/node_app
         tags: latest
         registry: ${{ secrets.AWS_ECR_REGISTRY }}
-        dockerfile: ./docker-compose.ci.yml
+        dockerfile: ./backend/Dockerfile
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
