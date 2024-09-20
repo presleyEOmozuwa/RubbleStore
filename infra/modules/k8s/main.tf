@@ -70,7 +70,7 @@ resource "kubernetes_service" "react_app" {
       port        = 3000
       target_port = 3000
     }
-    type = "ClusterIP"
+    type = "LoadBalancer"
   }
 }
 
@@ -133,7 +133,7 @@ resource "kubernetes_service" "node_app" {
       port        = 5000
       target_port = 5000
     }
-    type = "ClusterIP"
+    type = "LoadBalancer"
   }
 }
 
