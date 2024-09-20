@@ -21,24 +21,29 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1    
+        aws-region: us-east-1
 
-    - name: terraform Init
-      working-directory: ./infra/
+    - name: terraform init
       run: |
-        terraform init
+        terraform init       
+
+    - name: terraform destroy - K8S
+      uses: dflook/terraform-destroy@v1
+      with:
+        path: ./infra/modules/k8s/
+        target: module.k8s
+        auto_approve: true
     
-    - name: terraform Destroy - K8S
-      working-directory: ./infra/modules/k8s/
-      run: |
-        terraform destroy -auto-approve -target=module.k8s
+    - name: terraform destroy - EKS
+      uses: dflook/terraform-destroy@v1
+      with:
+        path: ./infra/modules/eks/
+        target: module.eks
+        auto_approve: true
 
-    - name: terraform Destroy - EKS
-      working-directory: ./infra/modules/eks/
-      run: |
-        terraform destroy -auto-approve -target=module.eks
-
-    - name: terraform Destroy - VPC
-      working-directory: ./infra/modules/vpc/
-      run: |
-        terraform destroy -auto-approve -target=module.vpc        
+    - name: terraform destroy - VPC
+      uses: dflook/terraform-destroy@v1
+      with:
+        path: ./infra/modules/vpc/
+        target: module.vpc
+        auto_approve: true    
