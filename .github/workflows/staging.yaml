@@ -27,12 +27,14 @@ jobs:
       run: terraform init
     
     - name: terraform apply - VPC
+      working-directory: ./infra/
       run: |
-        terraform apply -auto-approve -target=./infra/module.vpc
+        terraform apply -auto-approve -target=module.vpc
 
     - name: terraform apply - EKS
+      working-directory: ./infra/
       run: |
-        terraform apply -auto-approve -target=./infra/module.eks
+        terraform apply -auto-approve -target=module.eks
          
     - name: Build & push Docker image to AWS ECR for react app
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -55,5 +57,6 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: terraform apply - K8S
+      working-directory: ./infra/
       run: |
-        terraform apply -auto-approve -target=./infra/module.k8s
+        terraform apply -auto-approve -target=module.k8s
