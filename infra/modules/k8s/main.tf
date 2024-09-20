@@ -1,5 +1,5 @@
-data "aws_eks_cluster_auth" "ekscluster"{
-   name = "ekscluster"
+data "aws_eks_cluster_auth" "ekscluster" {
+  name = "ekscluster"
 }
 
 provider "kubernetes" {
@@ -34,7 +34,7 @@ resource "kubernetes_deployment" "react_app" {
       }
       spec {
         container {
-          name = "react-app"
+          name  = "react-app"
           image = var.imgUrl_react
           port {
             container_port = 3000
@@ -98,7 +98,7 @@ resource "kubernetes_deployment" "node_app" {
       }
       spec {
         container {
-          name = "node-app"
+          name  = "node-app"
           image = var.imgUrl_node
           port {
             container_port = 5000
@@ -138,33 +138,41 @@ resource "kubernetes_service" "node_app" {
 }
 
 // INGRESS ROUTING RULES
-resource "kubernetes_ingress" "app_ingress" {
+resource "kubernetes_ingress_v1" "app_ingress" {
   metadata {
-    name = "app-ingress"
+    name      = "app-ingress"
     namespace = "default"
     annotations = {
-      "alb.ingress.kubernetes.io/scheme" = "internet-facing"
-      "alb.ingress.kubernetes.io/listen-ports" = jsonencode([{"HTTP": 80}, {"HTTPS": 443}])
+      "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
+      "alb.ingress.kubernetes.io/listen-ports" = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
     }
   }
 
   spec {
     rule {
-      host = "example.com"  # Replace with your domain
+      host = "example.com" # Replace with your domain
       http {
         path {
           path = "/api*"
           backend {
-            service_name = kubernetes_service.node_app.metadata[0].name
-            service_port = 5000
+            service {
+              name = kubernetes_service.node_app.metadata.0.name
+              port {
+                number = kubernetes_service.node_app.spec.0.port.0.port
+              }
+            }
           }
         }
 
         path {
           path = "/*"
           backend {
-            service_name = kubernetes_service.react_app.metadata[0].name
-            service_port = 3000
+            service {
+              name = kubernetes_service.react_app.metadata.0.name
+              port {
+                number = kubernetes_service.react_app.spec.0.port.0.port
+              }
+            }
           }
         }
       }
