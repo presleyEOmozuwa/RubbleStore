@@ -5,7 +5,7 @@ FROM node:buster
 WORKDIR /app
 
 # Copy the package.json to the created Directory
-COPY ./package.json ./
+COPY package.json ./
 
 # Run the npm install to download node_modules
 RUN npm install
