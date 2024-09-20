@@ -7,6 +7,12 @@ on:
     branches:
       - main
 
+defaults:
+  run:
+    shell: bash
+    working-directory: ./web
+          
+
 jobs:
   lint:
     runs-on: ubuntu-latest

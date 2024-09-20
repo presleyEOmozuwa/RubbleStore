@@ -1,6 +1,12 @@
 name: Staging CI
 on:
   workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+    working-directory: ./web
+
 jobs:
   staging:
     runs-on: ubuntu-latest

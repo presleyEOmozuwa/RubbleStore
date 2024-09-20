@@ -1,6 +1,7 @@
 name: Staging TearDown CI
 on:
   workflow_dispatch:
+
 jobs:
   staging:
     runs-on: ubuntu-latest
