@@ -5,7 +5,7 @@ FROM node:alpine
 WORKDIR /app
 
 # Copy the package.json to the created Directory
-COPY ./package.json ./
+COPY ./frontend/package.json ./
 
 # Run the npm install to have node_modules
 RUN npm install
