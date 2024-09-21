@@ -24,6 +24,7 @@ jobs:
         aws-region: us-east-1
 
     - name: terraform init
+      working-directory: ./infra/
       run: terraform init
               
     - name: terraform destroy - K8S
