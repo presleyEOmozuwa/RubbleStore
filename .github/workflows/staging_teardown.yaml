@@ -5,8 +5,10 @@ on:
 jobs:
   staging:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -27,15 +29,17 @@ jobs:
       working-directory: ./infra/
       run: terraform init
               
-    - name: terraform destroy - K8S
+    - name: terraform destroy - K8S with Debug and Parallelism
       working-directory: ./infra/modules/k8s
-      run: terraform destroy -auto-approve -target=module.k8s
+      run: |
+        TF_LOG=DEBUG terraform destroy -auto-approve -target=module.k8s -parallelism=2
 
-    - name: terraform destroy - EKS
+    - name: terraform destroy - EKS with Parallelism
       working-directory: ./infra/modules/eks
-      run: terraform destroy -auto-approve -target=module.eks
+      run: terraform destroy -auto-approve -target=module.eks -parallelism=2
 
-    - name: terraform destroy - VPC
+    - name: terraform destroy - VPC with Parallelism
       working-directory: ./infra/modules/vpc
-      run: terraform destroy -auto-approve -target=module.vpc    
+      run: terraform destroy -auto-approve -target=module.vpc -parallelism=2
+  
       
