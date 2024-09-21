@@ -24,26 +24,17 @@ jobs:
         aws-region: us-east-1
 
     - name: terraform init
-      run: |
-        terraform init       
-
+      run: terraform init
+              
     - name: terraform destroy - K8S
-      uses: dflook/terraform-destroy@v1
-      with:
-        path: ./infra/modules/k8s/
-        target: module.k8s
-        auto_approve: true
-    
+      working-directory: ./infra/modules/k8s
+      run: terraform destroy -auto-approve -target=module.k8s
+
     - name: terraform destroy - EKS
-      uses: dflook/terraform-destroy@v1
-      with:
-        path: ./infra/modules/eks/
-        target: module.eks
-        auto_approve: true
+      working-directory: ./infra/modules/eks
+      run: terraform destroy -auto-approve -target=module.eks
 
     - name: terraform destroy - VPC
-      uses: dflook/terraform-destroy@v1
-      with:
-        path: ./infra/modules/vpc/
-        target: module.vpc
-        auto_approve: true    
+      working-directory: ./infra/modules/vpc
+      run: terraform destroy -auto-approve -target=module.vpc     
+      
