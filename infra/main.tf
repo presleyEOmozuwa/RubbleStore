@@ -7,7 +7,7 @@ terraform {
 }
 
 module "vpc" {
-  source = "modules/vpc"
+  source = "./modules/vpc"
   region = "us-east-1"
   vpc_tags = {
     Name = "admin-vpc"
@@ -31,7 +31,7 @@ module "vpc" {
 }
 
 module "eks" {
-  source = "modules/eks"
+  source = "./modules/eks"
   subnet_ids = module.vpc.subnet_ids
   client_name = "react_app"
   server_name = "node_app"
@@ -39,7 +39,7 @@ module "eks" {
 }
 
 module "k8s" {
-  source = "modules/k8s"
+  source = "./modules/k8s"
   eks_cluster_ca = module.eks.eks_cluster_ca
   eks_cluster_host = module.eks.eks_cluster_host
   imgUrl_react = module.eks.ecr_react_repo
