@@ -27,14 +27,14 @@ jobs:
       uses: dflook/terraform-apply@v1
       with:
         path: ./infra/modules/vpc/
-        var_file: ./infra/modules/vpc/vpc.tfvars
+        target: module.vpc
         auto_approve: true
 
     - name: terraform apply - EKS
       uses: dflook/terraform-apply@v1
       with:
         path: ./infra/modules/eks/
-        var_file: ./infra/modules/eks/eks.tfvars
+        target: module.eks
         auto_approve: true        
     
     - name: Build & push Docker image to AWS ECR for react app
@@ -61,5 +61,5 @@ jobs:
       uses: dflook/terraform-apply@v1
       with:
         path: ./infra/modules/k8s/
-        var_file: ./infra/modules/k8s/k8s.tfvars
+        target: module.k8s
         auto_approve: true 
