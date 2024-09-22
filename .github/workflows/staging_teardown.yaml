@@ -26,20 +26,19 @@ jobs:
         aws-region: us-east-1
 
     - name: terraform init
-      working-directory: ./infra/
       run: terraform init
               
     - name: terraform destroy - K8S with Debug and Parallelism
-      working-directory: ./infra/modules/k8s
+      working-directory: ./modules/k8s
       run: |
         TF_LOG=DEBUG terraform destroy -auto-approve -target=module.k8s -parallelism=2
 
     - name: terraform destroy - EKS with Parallelism
-      working-directory: ./infra/modules/eks
+      working-directory: ./modules/eks
       run: terraform destroy -auto-approve -target=module.eks -parallelism=2
 
     - name: terraform destroy - VPC with Parallelism
-      working-directory: ./infra/modules/vpc
+      working-directory: ./modules/vpc
       run: terraform destroy -auto-approve -target=module.vpc -parallelism=2
   
       
