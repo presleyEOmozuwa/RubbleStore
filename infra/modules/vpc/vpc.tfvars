@@ -1,3 +1,5 @@
+region = "us-east-1"
+
 vpc_tags = {
   Name = "admin-vpc"
 }
