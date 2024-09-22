@@ -27,6 +27,9 @@ jobs:
 
     - name: terraform init
       run: terraform init
+
+    - name: terraform plan
+      uses: dflook/terraform-plan@v1
               
     - name: terraform destroy - K8S with Debug and Parallelism
       working-directory: ./modules/k8s

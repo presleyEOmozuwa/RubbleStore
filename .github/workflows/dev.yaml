@@ -149,6 +149,4 @@ jobs:
           aws-region: us-east-1
 
       - name: terraform plan
-        uses: dflook/terraform-plan@v1
-        with:
-          path: ./infra/      
+        uses: dflook/terraform-plan@v1 

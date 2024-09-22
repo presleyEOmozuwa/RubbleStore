@@ -24,7 +24,10 @@ jobs:
         aws-region: us-east-1
 
     - name: terraform init
-      run: terraform init       
+      run: terraform init 
+
+    - name: terraform plan
+      uses: dflook/terraform-plan@v1         
 
     - name: terraform apply - VPC
       working-directory: ./modules/vpc
