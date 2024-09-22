@@ -26,14 +26,13 @@ jobs:
     - name: terraform apply - VPC
       uses: dflook/terraform-apply@v1
       with:
-        path: ./infra/modules/vpc/
-        target: module.vpc
+        path: ./modules/vpc/
         auto_approve: true
 
     - name: terraform apply - EKS
       uses: dflook/terraform-apply@v1
       with:
-        path: ./infra/modules/eks/
+        path: ./modules/eks/
         target: module.eks
         auto_approve: true        
     
@@ -60,6 +59,5 @@ jobs:
     - name: terraform apply - K8S
       uses: dflook/terraform-apply@v1
       with:
-        path: ./infra/modules/k8s/
-        target: module.k8s
+        path: ./modules/k8s/
         auto_approve: true 
