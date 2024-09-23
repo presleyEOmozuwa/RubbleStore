@@ -39,7 +39,8 @@ jobs:
         ref: temp/core-all 
 
     - name: Make script executable
-      run: chmod +x staging_resource_file.sh
+      working-directory: ./infra/
+      run: chmod +x ./staging_resource_file.sh
     
     - name: Create staging environment resource files
       id: create_resource_files
