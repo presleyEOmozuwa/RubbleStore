@@ -36,18 +36,16 @@ jobs:
     - name: Checkout repository and the main branch
       uses: actions/checkout@v3
       with: 
-        ref: temp/core-all
-
-    - name: Install jq
-      run: sudo apt-get install -y jq    
+        ref: temp/core-all 
 
     - name: Make script executable
       run: chmod +x staging_resource_file.sh
     
     - name: Create staging environment resource files
       id: create_resource_files
+      working-directory: ./infra/
       run: |
-        OUTPUT="$(staging_resource_file.sh PR_${{ github.event.inputs.PR_number }}) | jq -r .terraform_expected_output)"
+        OUTPUT="$(./staging_resource_file.sh PR_${{ github.event.inputs.PR_number }}) | jq -r .terraform_expected_output)"
         echo "::set-output name=STAGING_RESOURCE_NAME::$OUTPUT"
     
     # ************** MAIN TASK FOR TERRAFORM PLAN ******************
