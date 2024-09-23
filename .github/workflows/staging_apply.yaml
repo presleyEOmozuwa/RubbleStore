@@ -85,19 +85,19 @@ jobs:
     # ************** POST TASK FOR TERRAFORM PLAN ******************
     - name: Update Pull Request
       uses: actions/github-scripts@v7
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
       env:
         PLAN: "`terraform\n${{ steps.plan.outputs.stdout }}`"
-      script: |
-         const output = `###### Terraform Initialization: ${{ steps.init.outcome }}\n###### Terraform Plan: ${{ steps.plan.outcome }}\n\n<details>\n<summary>Show Plan</summary>\n\n\`\`\`\n${process.env.PLAN}\n\`\`\`\n</details>`;
-         
-         github.rest.issues.createComment({
-           issue_number: ${{ github.event.inputs.PR_number }},
-           owner: context.repo.owner,
-           repo: context.repo.repo,
-           body: output
-         });
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        script: |
+          const output = `###### Terraform Initialization: ${{ steps.init.outcome }}\n###### Terraform Plan: ${{ steps.plan.outcome }}\n\n<details>\n<summary>Show Plan</summary>\n\n\`\`\`\n${process.env.PLAN}\n\`\`\`\n</details>`;
+          
+          github.rest.issues.createComment({
+            issue_number: ${{ github.event.inputs.PR_number }},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          });
 
     - name: Terraform Plan Status
       if: steps.plan.outcome == 'failure'
