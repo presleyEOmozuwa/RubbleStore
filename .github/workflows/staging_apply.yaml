@@ -7,21 +7,22 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1   
 
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.9.1  
-
-    - name: Set up AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-east-1
 
     - name: terraform init
       run: terraform init 
@@ -30,12 +31,10 @@ jobs:
       uses: dflook/terraform-plan@v1         
 
     - name: terraform apply - VPC
-      working-directory: ./modules/vpc
-      run: terraform apply -auto-approve -target=module.vpc
+      run: terraform apply -auto-approve -chdir=modules/vpc
 
     - name: terraform apply - EKS
-      working-directory: ./modules/eks
-      run: terraform apply -auto-approve -target=module.eks      
+      run: terraform apply -auto-approve -chdir=modules/eks    
     
     - name: Build & push Docker image to AWS ECR for react app
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -59,4 +58,4 @@ jobs:
     
     - name: terraform apply - K8S
       working-directory: ./modules/k8s
-      run: terraform apply -auto-approve -target=module.k8s
+      run: terraform apply -auto-approve -chdir=modules/k8s
