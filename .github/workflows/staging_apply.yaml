@@ -31,10 +31,12 @@ jobs:
       uses: dflook/terraform-plan@v1         
 
     - name: terraform apply - VPC
-      run: terraform apply -auto-approve -chdir=modules/vpc
+      working-directory: modules/vpc
+      run: terraform apply -auto-approve
 
     - name: terraform apply - EKS
-      run: terraform apply -auto-approve -chdir=modules/eks    
+      working-directory: modules/eks
+      run: terraform apply -auto-approve   
     
     - name: Build & push Docker image to AWS ECR for react app
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -57,5 +59,5 @@ jobs:
         password: ${{ secrets.DOCKER_PASSWORD }}
     
     - name: terraform apply - K8S
-      working-directory: ./modules/k8s
-      run: terraform apply -auto-approve -chdir=modules/k8s
+      working-directory: modules/k8s
+      run: terraform apply -auto-approve
