@@ -25,22 +25,23 @@ jobs:
         terraform_version: 1.9.1  
 
     - name: terraform init
+      working-diectory: ./infra/
       run: terraform init
 
     - name: terraform plan
       uses: dflook/terraform-plan@v1
               
     - name: terraform destroy - K8S with Debug and Parallelism
-      working-directory: ./modules/k8s
+      working-directory: ./infra/modules/k8s
       run: |
         TF_LOG=DEBUG terraform destroy -auto-approve -target=module.k8s -parallelism=2
 
     - name: terraform destroy - EKS with Parallelism
-      working-directory: ./modules/eks
+      working-directory: ./infra/modules/eks
       run: terraform destroy -auto-approve -target=module.eks -parallelism=2
 
     - name: terraform destroy - VPC with Parallelism
-      working-directory: ./modules/vpc
+      working-directory: ./infra/modules/vpc
       run: terraform destroy -auto-approve -target=module.vpc -parallelism=2
   
       

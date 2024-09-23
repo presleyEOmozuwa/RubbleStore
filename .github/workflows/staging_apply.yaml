@@ -1,52 +1,148 @@
 name: Staging CI
+
 on:
   workflow_dispatch:
+    inputs:
+      PR_number:
+        description: 'Pull request number'
+        required: true
 
 jobs:
-  staging:
+  terraform-staging:
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
+    # *********** BEFORE MAIN TASK ****************
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+    - name: Verify Pull Request Number
+      uses: actions/github-scripts@v7
+      id: verify_pr_number
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        result-encoding: string
+        script: |
+           const response = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: ${{ github.event.inputs.PR_number }}
+           });
 
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v4
+           // Check if Pull Request is Open
+           if (response.data.number !== ${{ github.event.inputs.PR_number }}) {
+               throw new Error("Pull request is not open or number is not valid")
+           } else {
+              console.log("PR ref: " + response.data.head.ref)
+              return response.data.head.ref
+           }
+
+    - name: Checkout repository and the main branch
+      uses: actions/checkout@v3
+      with: 
+        ref: temp/core-all
+
+    - name: Create staging environment resource files
+      id: create_resource_files
+      working-directory: ./infra/
+      run: |
+        OUTPUT="$(staging_resource_file.sh PR_${{ github.event.inputs.PR_number }}) | jq -r .terraform_expected_output)"
+        echo "::set-output name=STAGING_RESOURCE_NAME::$OUTPUT"
+    
+    # ************** MAIN TASK FOR TERRAFORM PLAN ******************
+    - name: Set up Terraform
+      uses: hashicorp/setup-terraform@v2
+      with:
+        terraform_version: 1.9.1
+        cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
+    
+    - name: Set up AWS credentials
+      uses: aws-actions/configure-aws-credentials@v2
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: us-west-1   
+        aws-region: us-east-1
+    
+    # Apply Plan configurations
+    - name: Terraform init and validate
+      id: init
+      working-directory: ./infra/
+      run: |
+        terraform init
+        terraform validate -no-color
 
-    - name: Set up Terraform
-      uses: hashicorp/setup-terraform@v3
+    - name: Terraform Plan - VPC
+      working-directory: ./infra/modules/vpc/
+      run: terraform plan -no-color
+      continue-on-error: true
+
+    - name: Terraform Plan - EKS
+      working-directory: ./infra/modules/eks/
+      run: terraform plan -no-color
+      continue-on-error: true
+
+    - name: Terraform Plan - K8S
+      working-directory: ./infra/modules/k8s/
+      run: terraform plan -no-color
+      continue-on-error: true    
+
+    # ************** POST TASK FOR TERRAFORM PLAN ******************
+    - name: Update Pull Request
+      uses: actions/github-scripts@v7
       with:
-        terraform_version: 1.9.1  
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+      env:
+        PLAN: "`terraform\n${{ steps.plan.outputs.stdout }}`"
+      script: |
+         const output = `###### Terraform Initialization: ${{ steps.init.outcome }}\n###### Terraform Plan: ${{ steps.plan.outcome }}\n\n<details>\n<summary>Show Plan</summary>\n\n\`\`\`\n${process.env.PLAN}\n\`\`\`\n</details>`;
+         
+         github.rest.issues.createComment({
+           issue_number: ${{ github.event.inputs.PR_number }},
+           owner: context.repo.owner,
+           repo: context.repo.repo,
+           body: output
+         });
 
-    - name: terraform init
-      run: terraform init 
+    - name: Terraform Plan Status
+      if: steps.plan.outcome == 'failure'
+      run: exit 1
 
-    - name: terraform plan
-      uses: dflook/terraform-plan@v1         
+    # ************** MAIN TASK FOR TERRAFORM APPLY ******************
+    # Apply Terraform configurations for VPC
+    - name: Terraform Init - VPC
+      working-directory: ./infra/modules/vpc/
+      run: terraform init
 
-    - name: terraform apply - VPC
-      working-directory: modules/vpc
+    - name: Terraform Apply - VPC
+      working-directory: ./infra/modules/vpc/
       run: terraform apply -auto-approve
 
-    - name: terraform apply - EKS
-      working-directory: modules/eks
-      run: terraform apply -auto-approve   
-    
+    - name: Terraform Output - VPC
+      working-directory: ./infra/modules/vpc/
+      run: terraform output -raw ${{ steps.create_resource_files.outputs.STAGING_RESOURCE_NAME }}   
+
+    # Apply Terraform configurations for EKS
+    - name: Terraform Init - EKS
+      working-directory: ./infra/modules/eks/
+      run: terraform init
+
+    - name: Terraform Apply - EKS
+      working-directory: ./infra/modules/eks/
+      run: terraform apply -auto-approve
+
+    - name: Terraform Output - EKS
+      working-directory: ./infra/modules/eks/
+      run: terraform output   
+
+    # Build and push Docker images to ECR
+    - name: Log in to Amazon ECR
+      run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+
     - name: Build & push Docker image to AWS ECR for react app
-      uses: mr-smithers-excellent/docker-build-push@v6
-      with:
-        image: react_app
-        tags: latest
-        registry: ${{ secrets.AWS_ECR_REGISTRY }}
-        dockerfile: ./docker-compose.ci.yml
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+    uses: mr-smithers-excellent/docker-build-push@v6
+    with:
+      image: react_app
+      tags: latest
+      registry: ${{ secrets.AWS_ECR_REGISTRY }}
+      dockerfile: ./docker-compose.ci.yml
+      username: ${{ secrets.DOCKER_USERNAME }}
+      password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Build & push Docker image to AWS ECR for node app
       uses: mr-smithers-excellent/docker-build-push@v6
@@ -58,6 +154,32 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-    - name: terraform apply - K8S
-      working-directory: modules/k8s
+    # Apply Terraform configurations for K8S
+    - name: Terraform Init - K8S
+      working-directory: ./infra/modules/k8s/
+      run: terraform init
+
+    - name: Terraform Apply - K8S
+      working-directory: ./infra/modules/k8s/
       run: terraform apply -auto-approve
+    
+    - name: Terraform Output - K8S
+      working-directory: ./infra/modules/k8s/
+      run: terraform output   
+    
+    # ************** POST TASK FOR TERRAFORM APPLY ******************
+    - name: Commit terraform resource files to PR
+      working-directory: ./infra/
+      run: |
+        git config --global user.name '${{ github.actor }}'
+        git config --global user.email '${{ github.actor }}@users.noreply.github.com'
+        git remote --set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+        git add ./\*.tf
+        git commit -m "add terraform resource files" && \
+          git push || echo "Nothing to commit"
+    
+    # Checkout the PR branch so that we can deploy it
+    - name: Checkout PR branch
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ steps.verify_pr_number.outputs.result }}
