@@ -38,9 +38,11 @@ jobs:
       with: 
         ref: temp/core-all
 
+    - name: Make script executable
+      run: chmod +x staging_resource_file.sh
+    
     - name: Create staging environment resource files
       id: create_resource_files
-      working-directory: ./infra/
       run: |
         OUTPUT="$(staging_resource_file.sh PR_${{ github.event.inputs.PR_number }}) | jq -r .terraform_expected_output)"
         echo "::set-output name=STAGING_RESOURCE_NAME::$OUTPUT"
