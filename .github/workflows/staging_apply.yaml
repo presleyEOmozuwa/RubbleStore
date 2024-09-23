@@ -38,6 +38,9 @@ jobs:
       with: 
         ref: temp/core-all
 
+    - name: Install jq
+      run: sudo apt-get install -y jq    
+
     - name: Make script executable
       run: chmod +x staging_resource_file.sh
     
@@ -52,7 +55,6 @@ jobs:
       uses: hashicorp/setup-terraform@v3
       with:
         terraform_version: 1.9.1
-        cli_config_credentials_token: ${{ secrets.TERRAFORM_API_TOKEN }}
     
     - name: Set up AWS credentials
       uses: aws-actions/configure-aws-credentials@v4
