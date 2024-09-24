@@ -1,42 +1,14 @@
 name: Staging CI
-
 on:
   workflow_dispatch:
-    inputs:
-      PR_number:
-        description: 'Pull request number'
-        required: true
 
 jobs:
   terraform-staging:
     runs-on: ubuntu-latest
-    # *********** BEFORE MAIN TASK ****************
     steps:
-    - name: Verify Pull Request Number
-      uses: actions/github-script@v7
-      id: verify_pr_number
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        result-encoding: string
-        script: |
-           const response = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: ${{ github.event.inputs.PR_number }}
-           });
-
-           // Check if Pull Request is Open
-           if (response.data.number !== ${{ github.event.inputs.PR_number }}) {
-               throw new Error("Pull request is not open or number is not valid")
-           } else {
-              console.log("PR ref: " + response.data.head.ref)
-              return response.data.head.ref
-           }
-
-    - name: Checkout repository and the main branch
+    - name: Checkout code
       uses: actions/checkout@v3
     
-    # ************** MAIN TASK FOR TERRAFORM PLAN ******************
     - name: Set up Terraform
       uses: hashicorp/setup-terraform@v3
       with:
@@ -72,28 +44,6 @@ jobs:
       run: terraform plan -no-color
       continue-on-error: true    
 
-    # ************** POST TASK FOR TERRAFORM PLAN ******************
-    - name: Update Pull Request
-      uses: actions/github-script@v7
-      env:
-        PLAN: "`terraform\n${{ steps.plan.outputs.stdout }}`"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `###### Terraform Initialization: ${{ steps.init.outcome }}\n###### Terraform Plan: ${{ steps.plan.outcome }}\n\n<details>\n<summary>Show Plan</summary>\n\n\`\`\`\n${process.env.PLAN}\n\`\`\`\n</details>`;
-          
-          github.rest.issues.createComment({
-            issue_number: ${{ github.event.inputs.PR_number }},
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          });
-
-    - name: Terraform Plan Status
-      if: steps.plan.outcome == 'failure'
-      run: exit 1
-
-    # ************** MAIN TASK FOR TERRAFORM APPLY ******************
     # Apply Terraform configurations for VPC
     - name: Terraform Init - VPC
       working-directory: ./infra/modules/vpc/
@@ -102,10 +52,6 @@ jobs:
     - name: Terraform Apply - VPC
       working-directory: ./infra/modules/vpc/
       run: terraform apply -auto-approve
-
-    - name: Terraform Output - VPC
-      working-directory: ./infra/modules/vpc/
-      run: terraform output -raw ${{ steps.create_resource_files.outputs.STAGING_RESOURCE_NAME }}   
 
     # Apply Terraform configurations for EKS
     - name: Terraform Init - EKS
@@ -156,20 +102,3 @@ jobs:
     - name: Terraform Output - K8S
       working-directory: ./infra/modules/k8s/
       run: terraform output   
-    
-    # ************** POST TASK FOR TERRAFORM APPLY ******************
-    - name: Commit terraform resource files to PR
-      working-directory: ./infra/
-      run: |
-        git config --global user.name '${{ github.actor }}'
-        git config --global user.email '${{ github.actor }}@users.noreply.github.com'
-        git remote --set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}
-        git add ./\*.tf
-        git commit -m "add terraform resource files" && \
-          git push || echo "Nothing to commit"
-    
-    # Checkout the PR branch so that we can deploy it
-    - name: Checkout PR branch
-      uses: actions/checkout@v2
-      with:
-        ref: ${{ steps.verify_pr_number.outputs.result }}
