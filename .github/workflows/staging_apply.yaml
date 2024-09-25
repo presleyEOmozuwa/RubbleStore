@@ -23,47 +23,46 @@ jobs:
     
     # Apply Plan configurations
     - name: Terraform init and validate
-      id: init
-      working-directory: ./infra/
+      working-directory: ./
       run: |
         terraform init
         terraform validate -no-color
 
     - name: Terraform Plan - VPC
-      working-directory: ./infra/modules/vpc/
+      working-directory: ./modules/vpc/
       run: terraform plan -no-color
       continue-on-error: true
 
     - name: Terraform Plan - EKS
-      working-directory: ./infra/modules/eks/
+      working-directory: ./modules/eks/
       run: terraform plan -no-color
       continue-on-error: true
 
     - name: Terraform Plan - K8S
-      working-directory: ./infra/modules/k8s/
+      working-directory: ./modules/k8s/
       run: terraform plan -no-color
       continue-on-error: true    
 
     # Apply Terraform configurations for VPC
     - name: Terraform Init - VPC
-      working-directory: ./infra/modules/vpc/
+      working-directory: ./modules/vpc/
       run: terraform init
 
     - name: Terraform Apply - VPC
-      working-directory: ./infra/modules/vpc/
+      working-directory: ./modules/vpc/
       run: terraform apply -auto-approve
 
     # Apply Terraform configurations for EKS
     - name: Terraform Init - EKS
-      working-directory: ./infra/modules/eks/
+      working-directory: ./modules/eks/
       run: terraform init
 
     - name: Terraform Apply - EKS
-      working-directory: ./infra/modules/eks/
+      working-directory: ./modules/eks/
       run: terraform apply -auto-approve
 
     - name: Terraform Output - EKS
-      working-directory: ./infra/modules/eks/
+      working-directory: ./modules/eks/
       run: terraform output   
 
     # Build and push Docker images to ECR
@@ -92,13 +91,13 @@ jobs:
     
     # Apply Terraform configurations for K8S
     - name: Terraform Init - K8S
-      working-directory: ./infra/modules/k8s/
+      working-directory: ./modules/k8s/
       run: terraform init
 
     - name: Terraform Apply - K8S
-      working-directory: ./infra/modules/k8s/
+      working-directory: ./modules/k8s/
       run: terraform apply -auto-approve
     
     - name: Terraform Output - K8S
-      working-directory: ./infra/modules/k8s/
+      working-directory: ./modules/k8s/
       run: terraform output   
