@@ -25,15 +25,7 @@ jobs:
       working-directory: ./infra/
       run: terraform init
     
-    - name: Destroy K8S resources
+    - name: Destroy terraform resources
       working-directory: ./infra/
-      run: terraform destroy -auto-approve -target=module.k8s
-
-    - name: Destroy EKS resources
-      working-directory: ./infra/
-      run: terraform destroy -auto-approve -target=module.eks  
-
-    - name: Destroy K8S VPC
-      working-directory: ./infra/
-      run: terraform destroy -auto-approve -target=module.vpc
+      run: terraform destroy -auto-approve
       
