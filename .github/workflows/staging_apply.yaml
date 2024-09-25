@@ -21,51 +21,20 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
     
-    # Apply Plan configurations
-    - name: Terraform init and validate
-      id: init
+    - name: Terraform init
       working-directory: ./infra/
       run: |
         terraform init
         terraform validate -no-color
 
-    - name: Terraform Plan - VPC
-      working-directory: ./infra/modules/vpc/
-      run: terraform plan -no-color
-      continue-on-error: true
-
-    - name: Terraform Plan - EKS
-      working-directory: ./infra/modules/eks/
-      run: terraform plan -no-color
-      continue-on-error: true
-
-    - name: Terraform Plan - K8S
-      working-directory: ./infra/modules/k8s/
-      run: terraform plan -no-color
-      continue-on-error: true    
-
-    # Apply Terraform configurations for VPC
-    - name: Terraform Init - VPC
-      working-directory: ./infra/modules/vpc/
-      run: terraform init
-
-    - name: Terraform Apply - VPC
-      working-directory: ./infra/modules/vpc/
-      run: terraform apply -auto-approve
-
-    # Apply Terraform configurations for EKS
-    - name: Terraform Init - EKS
-      working-directory: ./infra/modules/eks/
-      run: terraform init
-
-    - name: Terraform Apply - EKS
-      working-directory: ./infra/modules/eks/
-      run: terraform apply -auto-approve
-
-    - name: Terraform Output - EKS
-      working-directory: ./infra/modules/eks/
-      run: terraform output   
-
+    - name: Apply Terraform for VPC
+      working-directory: ./infra/
+      run: terraform apply -auto-approve -target=module.vpc   
+  
+    - name: Apply Terraform for EKS
+      working-directory: ./infra/
+      run: terraform apply -auto-approve -target=module.eks 
+ 
     # Build and push Docker images to ECR
     - name: Log in to Amazon ECR
       run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
@@ -90,15 +59,6 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     
-    # Apply Terraform configurations for K8S
-    - name: Terraform Init - K8S
-      working-directory: ./infra/modules/k8s/
-      run: terraform init
-
-    - name: Terraform Apply - K8S
-      working-directory: ./infra/modules/k8s/
-      run: terraform apply -auto-approve
-    
-    - name: Terraform Output - K8S
-      working-directory: ./infra/modules/k8s/
-      run: terraform output   
+    - name: Apply Terraform for K8S
+      working-directory: ./infra/
+      run: terraform apply -auto-approve -target=module.k8s 
