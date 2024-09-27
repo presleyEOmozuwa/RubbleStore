@@ -24,11 +24,11 @@ resource "aws_iam_role" "eks_alb_role" {
         Action = "sts:AssumeRoleWithWebIdentity"
         Effect = "Allow"
         Principal = {
-          Federated = "arn:aws:iam::${var.account_id}:oidc-provider/${substr(data.aws_eks_cluster.ekscluster.identity[0].oidc[0].issuer)}"
+          Federated = "arn:aws:iam::${var.account_id}:oidc-provider/${data.aws_eks_cluster.ekscluster.identity[0].oidc[0].issuer}"
         }
         Condition = {
           "StringEquals" = {
-            "${substr(data.aws_eks_cluster.ekscluster.identity[0].oidc[0].issuer)}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
+            "${data.aws_eks_cluster.ekscluster.identity[0].oidc[0].issuer}:sub" = "system:serviceaccount:kube-system:aws-load-balancer-controller"
           }
         }
 
