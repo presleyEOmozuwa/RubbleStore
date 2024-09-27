@@ -40,7 +40,7 @@ resource "aws_iam_role" "eks_alb_role" {
 # Attach policies to the IAM role
 resource "aws_iam_role_policy_attachment" "eks_alb_policy_attach" {
   role       = aws_iam_role.eks_alb_role.name
-  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+  policy_arn = "arn:aws:iam::aws:${var.account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
 }
 
 # Create Kubernetes service account for the AWS Load Balancer Controller
@@ -53,10 +53,11 @@ resource "kubernetes_service_account" "aws_lb_controller_sa" {
 }
 
 # Associate the IAM role with the Kubernetes service account
-resource "aws_iam_role_policy" "eks_alb_policy" {
+resource "aws_iam_role_policy_attachment" "eks_alb_policy" {
   role   = aws_iam_role.eks_alb_role.id
-  policy = file("${path.module}/alb-policy.json") # Define this policy as per AWS LB Controller requirements
+  policy_arn = "arn:aws:iam::aws:${var.account_id}:policy/AWSLoadBalancerControllerIAMPolicy"
 }
+
 
 # Install AWS Load Balancer Controller using Helm provider
 provider "helm" {
