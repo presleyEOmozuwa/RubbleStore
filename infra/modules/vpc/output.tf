@@ -13,5 +13,5 @@ output "account_id" {
 }
 
 output "security_groups" {
-   value = [aws_security_group.sg.egress, aws_security_group.sg.ingress]
+   value = [aws_security_group.sg.id]
 }
