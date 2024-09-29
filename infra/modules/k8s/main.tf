@@ -18,7 +18,7 @@ provider "kubernetes" {
 resource "aws_iam_openid_connect_provider" "oidc" {
   client_id_list = ["sts.amazonaws.com"]
   thumbprint_list = ["9e99a48a9960e42c5c6046dd7f1a2fd2b16533b9"]  # Amazon's thumbprint
-  url            = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+  url            = data.aws_eks_cluster.ekscluster.identity[0].oidc[0].issuer
 }
 
 # Create Kubernetes service account for the AWS Load Balancer Controller
