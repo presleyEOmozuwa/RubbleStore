@@ -1,4 +1,3 @@
-
 output "vpc_id" {
   value = aws_vpc.main.id
 }
@@ -11,4 +10,8 @@ data "aws_caller_identity" "current" {}
 
 output "account_id" {
   value = data.aws_caller_identity.current.account_id
+}
+
+output "security_groups" {
+   value = [aws_security_group.sg.egress, aws_security_group.sg.ingress]
 }

@@ -14,6 +14,23 @@ provider "kubernetes" {
   cluster_ca_certificate = base64decode(var.eks_cluster_ca)
 }
 
+// Set up the OIDC PROVIDER
+resource "aws_iam_openid_connect_provider" "oidc" {
+  client_id_list = ["sts.amazonaws.com"]
+  thumbprint_list = ["9e99a48a9960e42c5c6046dd7f1a2fd2b16533b9"]  # Amazon's thumbprint
+  url            = data.aws_eks_cluster.cluster.identity[0].oidc[0].issuer
+}
+
+# Create Kubernetes service account for the AWS Load Balancer Controller
+resource "kubernetes_service_account" "aws_lb_controller_sa" {
+  metadata {
+    name      = "aws-load-balancer-controller"
+    namespace = "kube-system"
+  }
+  automount_service_account_token = true
+}
+
+
 # Create IAM role for AWS Load Balancer Controller
 resource "aws_iam_role" "eks_alb_role" {
   name = "eks-alb-role"
@@ -37,20 +54,6 @@ resource "aws_iam_role" "eks_alb_role" {
   })
 }
 
-# Attach policies to the IAM role
-resource "aws_iam_role_policy_attachment" "eks_alb_policy_attach" {
-  role       = aws_iam_role.eks_alb_role.name
-  policy_arn = "arn:aws:iam::${var.account_id}:policy/RubblesAWSLoadBalancerControllerIAMPolicy"
-}
-
-# Create Kubernetes service account for the AWS Load Balancer Controller
-resource "kubernetes_service_account" "aws_lb_controller_sa" {
-  metadata {
-    name      = "aws-load-balancer-controller"
-    namespace = "kube-system"
-  }
-  automount_service_account_token = true
-}
 
 # Associate the IAM role with the Kubernetes service account
 resource "aws_iam_role_policy_attachment" "eks_alb_policy" {
@@ -112,7 +115,7 @@ resource "kubernetes_deployment" "react_app" {
   metadata {
     name = "react-app"
     labels = {
-      App = "react-app"
+      app = "react-app"
     }
   }
 
@@ -120,13 +123,13 @@ resource "kubernetes_deployment" "react_app" {
     replicas = 2
     selector {
       match_labels = {
-        App = "react-app"
+        app = "react-app"
       }
     }
     template {
       metadata {
         labels = {
-          App = "react-app"
+          app = "react-app"
         }
       }
       spec {
@@ -176,7 +179,7 @@ resource "kubernetes_deployment" "node_app" {
   metadata {
     name = "node-app"
     labels = {
-      App = "node-app"
+      app = "node-app"
     }
   }
 
@@ -184,13 +187,13 @@ resource "kubernetes_deployment" "node_app" {
     replicas = 2
     selector {
       match_labels = {
-        App = "node-app"
+        app = "node-app"
       }
     }
     template {
       metadata {
         labels = {
-          App = "node-app"
+          app = "node-app"
         }
       }
       spec {
@@ -234,6 +237,34 @@ resource "kubernetes_service" "node_app" {
   }
 }
 
+// CREATE ALB LOAD BALANCER
+resource "aws_lb" "my_alb" {
+  name               = "my-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = var.security_groups 
+  subnets            =  var.subnet_ids
+
+  enable_deletion_protection = false
+  enable_http2               = true
+}
+
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.my_alb.arn
+  port              = 80
+  protocol          = "HTTP"
+
+  default_action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Hello, World!"
+      status_code  = "200"
+    }
+  }
+}
+
 # INGRESS ROUTING RULES
 resource "kubernetes_ingress_v1" "app_ingress" {
   metadata {
@@ -247,7 +278,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
 
   spec {
     rule {
-      host = "example.com" # Replace with your domain
+      host = "rubblestech.com" # Replace with your domain
       http {
         path {
           path = "/api*"

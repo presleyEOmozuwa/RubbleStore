@@ -27,7 +27,7 @@ module "vpc" {
    public_subnet_tags_2 = {
     Name = "public-subnet_2"
   }
-
+  
 }
 
 module "eks" {
@@ -41,7 +41,9 @@ module "eks" {
 module "k8s" {
   source = "./modules/k8s"
   vpc_id = module.vpc.vpc_id
+  subnet_ids = module.vpc.subnet_ids
   account_id = module.vpc.account_id
+  security_groups = module.vpc.security_groups
   eks_cluster_ca = module.eks.eks_cluster_ca
   eks_cluster_host = module.eks.eks_cluster_host
   imgUrl_react = module.eks.ecr_react_repo
