@@ -177,7 +177,7 @@ provider "helm" {
 }
 
 // Install AWS Load Balancer Controller
-resource "helm_release" "load_balancer_controller" {
+resource "helm_release" "load-balancer-controller" {
   name       = "aws-load-balancer-controller"
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
@@ -185,7 +185,7 @@ resource "helm_release" "load_balancer_controller" {
 
   set {
     name  = "clusterName"
-    value = aws_eks_cluster.ekscluster.name
+    value = "ekscluster"
   }
 
   set {
@@ -195,7 +195,7 @@ resource "helm_release" "load_balancer_controller" {
 
   set {
     name  = "serviceAccount.name"
-    value = var.aws_alb_controller
+    value = "alb-controller"
   }
 
   set {
@@ -210,7 +210,7 @@ resource "helm_release" "load_balancer_controller" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/load_balancer_controller"
+    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/load-balancer-controller"
   }
 }
 
