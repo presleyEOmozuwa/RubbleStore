@@ -13,5 +13,5 @@ output "account_id" {
 }
 
 output "security_groups" {
-   value = [aws_security_group.sg.id]
+   value = [aws_security_group.alb_sg.id]
 }
