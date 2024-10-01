@@ -177,7 +177,7 @@ provider "helm" {
 }
 
 // Install AWS Load Balancer Controller
-resource "helm_release" "load-balancer-controller" {
+resource "helm_release" "proxy-controller" {
   name       = "aws-load-balancer-controller"
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
@@ -210,7 +210,7 @@ resource "helm_release" "load-balancer-controller" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/load-balancer-controller"
+    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/proxy-controller"
   }
 }
 
