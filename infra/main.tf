@@ -43,6 +43,7 @@ module "k8s" {
   vpc_id = module.vpc.vpc_id
   subnet_ids = module.vpc.subnet_ids
   account_id = module.vpc.account_id
+  owner_id = module.vpc.owner_id
   security_groups = module.vpc.security_groups
   eks_cluster_ca = module.eks.eks_cluster_ca
   eks_cluster_host = module.eks.eks_cluster_host
