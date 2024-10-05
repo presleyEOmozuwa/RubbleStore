@@ -1,3 +1,15 @@
+data "aws_eks_cluster_auth" "ekscluster" {
+  name = "ekscluster"
+}
+
+
+// SET UP KUBERNETES
+provider "kubernetes" {
+  host                   = var.eks_cluster_host
+  token                  = data.aws_eks_cluster_auth.ekscluster.token
+  cluster_ca_certificate = base64decode(var.eks_cluster_ca)
+}
+
 # REACT APP RESOURCE
 resource "kubernetes_deployment" "react_app" {
   metadata {
@@ -58,7 +70,7 @@ resource "kubernetes_service" "react_app" {
       port        = 3000
       target_port = 3000
     }
-    type = "ClusterIP"
+    type = "NodePort"
   }
 }
 
@@ -121,7 +133,106 @@ resource "kubernetes_service" "node_app" {
       port        = 5000
       target_port = 5000
     }
-    type = "ClusterIP"
+    type = "NodePort"
+  }
+}
+
+data "tls_certificate" "cert" {
+  url = var.oidc_url
+}
+
+resource "aws_iam_openid_connect_provider" "eks" {
+  client_id_list  = ["sts.amazonaws.com"]
+  thumbprint_list = [data.tls_certificate.cert.certificates[0].sha1_fingerprint]
+  url             = data.tls_certificate.cert.url
+}
+
+data "aws_iam_policy_document" "alb_controller_assume_role_policy" {
+  statement {
+    effect = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+
+    condition {
+      test     = "StringEquals"
+      variable = "${replace(aws_iam_openid_connect_provider.eks.url, "https://", "")}:sub"
+      values   = ["system:serviceaccount:kube-system:alb-controller"]
+    }
+    principals {
+      type        = "Federated"
+      identifiers = [aws_iam_openid_connect_provider.eks.arn]
+    }
+  }
+}
+
+resource "aws_iam_role" "alb_controller_role" {
+  name               = "eks-alb-controller-role"
+  assume_role_policy = data.aws_iam_policy_document.alb_controller_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy_attachment" "alb_controller_policy_attachment" {
+  role       = aws_iam_role.alb_controller_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AWSLoadBalancerControllerIAMPolicy"
+}
+
+
+resource "kubernetes_service_account" "alb_controller" {
+  metadata {
+    name      = "alb-controller"
+    namespace = "kube-system"
+    annotations = {
+      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
+    }
+  }
+}
+
+
+#  SET UP HELM PROVIDER
+provider "helm" {
+  kubernetes {
+    host                   = var.eks_cluster_host
+    token                  = data.aws_eks_cluster_auth.ekscluster.token
+    cluster_ca_certificate = base64decode(var.eks_cluster_ca)
+  }
+}
+
+
+// Install AWS Load Balancer Controller
+resource "helm_release" "alb-controller" {
+  name       = "aws-load-balancer-controller"
+  chart      = "aws-load-balancer-controller"
+  repository = "https://aws.github.io/eks-charts"
+  namespace  = "kube-system"
+
+  timeout = 600
+
+  set {
+    name  = "clusterName"
+    value = "ekscluster"
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
+  }
+
+  set {
+    name  = "serviceAccount.name"
+    value = "alb-controller"
+  }
+
+  set {
+    name  = "region"
+    value = "us-east-1"
+  }
+
+  set {
+    name  = "vpcId"
+    value = var.vpc_id
+  }
+
+  set {
+    name  = "image.repository"
+    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/alb-controller"
   }
 }
 
@@ -142,7 +253,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
       host = "rubblestech.com" # Replace with your domain
       http {
         path {
-          path = "/api*"
+          path = "/api/*"
           backend {
             service {
               name = kubernetes_service.node_app.metadata.0.name
@@ -169,30 +280,4 @@ resource "kubernetes_ingress_v1" "app_ingress" {
   }
 }
 
-// CREATE ALB LOAD BALANCER
-resource "aws_lb" "my_alb" {
-  name               = "my-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = var.security_groups 
-  subnets            =  var.subnet_ids
 
-  enable_deletion_protection = false
-  enable_http2               = true
-}
-
-resource "aws_lb_listener" "http" {
-  load_balancer_arn = aws_lb.my_alb.arn
-  port              = 80
-  protocol          = "HTTP"
-
-  default_action {
-    type = "fixed-response"
-
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "Hello, World!"
-      status_code  = "200"
-    }
-  }
-}
