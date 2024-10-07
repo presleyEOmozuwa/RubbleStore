@@ -202,7 +202,7 @@ resource "helm_release" "alb-controller" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   namespace  = "kube-system"
-
+  replace = true
   timeout = 600
 
   set {
