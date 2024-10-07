@@ -202,7 +202,6 @@ resource "helm_release" "alb-controller" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   namespace  = "kube-system"
-  version = ">= 2.7.2"
 
   timeout = 600
 
@@ -280,7 +279,6 @@ resource "kubernetes_ingress_v1" "app_ingress" {
       }
     }
   }
-  wait_for_load_balancer = true
 }
 
 
