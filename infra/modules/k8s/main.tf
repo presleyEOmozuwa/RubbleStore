@@ -202,17 +202,13 @@ resource "helm_release" "alb-controller" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   namespace  = "kube-system"
+  version = ">= 2.7.2"
 
   timeout = 600
 
   set {
     name  = "clusterName"
     value = "ekscluster"
-  }
-
-  set {
-    name  = "serviceAccount.create"
-    value = "false"
   }
 
   set {
@@ -231,9 +227,15 @@ resource "helm_release" "alb-controller" {
   }
 
   set {
-    name  = "image.repository"
-    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/alb-controller"
+    name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
+    value = "arn:aws:iam::${var.owner_id}:role/alb-controller"
   }
+
+   set {
+    name  = "image.repository"
+    value = "602401143452.dkr.ecr.us-west-1.amazonaws.com/amazon/aws-load-balancer-controller"
+  }
+  
 }
 
 
@@ -278,6 +280,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
       }
     }
   }
+  wait_for_load_balancer = true
 }
 
 
