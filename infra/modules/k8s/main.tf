@@ -181,7 +181,7 @@ resource "kubernetes_service_account" "alb_controller" {
     namespace = "kube-system"
 
     labels = {
-      app.kubernetes.io/managed-by = "Helm"
+      "app.kubernetes.io/managed-by" = "Helm"
     }
 
     annotations = {
