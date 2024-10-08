@@ -266,6 +266,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     name      = "app-ingress"
     namespace = "default"
     annotations = {
+      "kubernetes.io/ingress.class": "alb"
       "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
       "alb.ingress.kubernetes.io/listen-ports" = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
     }
