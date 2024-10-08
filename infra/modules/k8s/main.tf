@@ -149,7 +149,7 @@ resource "aws_iam_openid_connect_provider" "eks" {
 
 data "aws_iam_policy_document" "alb_controller_assume_role_policy" {
   statement {
-    effect = "Allow"
+    effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
     condition {
@@ -179,11 +179,19 @@ resource "kubernetes_service_account" "alb_controller" {
   metadata {
     name      = "alb-controller"
     namespace = "kube-system"
+
+    labels = {
+      app.kubernetes.io/managed-by = "Helm"
+    }
+
     annotations = {
+      "meta.helm.sh/release-name"      = "aws-load-balancer-controller"
+      "meta.helm.sh/release-namespace" = "kube-system"
       "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
     }
   }
 }
+
 
 
 #  SET UP HELM PROVIDER
@@ -202,8 +210,7 @@ resource "helm_release" "alb-controller" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   namespace  = "kube-system"
-  replace = true
-  timeout = 600
+  timeout    = 600
 
   set {
     name  = "clusterName"
@@ -226,15 +233,30 @@ resource "helm_release" "alb-controller" {
   }
 
   set {
+    name  = "serviceAccount.annotations.meta\\.helm\\.sh/release-name"
+    value = "aws-load-balancer-controller"
+  }
+
+  set {
+    name  = "serviceAccount.annotations.meta\\.helm\\.sh/release-namespace"
+    value = "kube-system"
+  }
+
+  set {
+    name  = "serviceAccount.labels.app\\.kubernetes\\.io/managed-by"
+    value = "Helm"
+  }
+
+  set {
     name  = "serviceAccount.annotations.eks\\.amazonaws\\.com/role-arn"
     value = "arn:aws:iam::${var.owner_id}:role/alb-controller"
   }
 
-   set {
+  set {
     name  = "image.repository"
     value = "602401143452.dkr.ecr.us-west-1.amazonaws.com/amazon/aws-load-balancer-controller"
   }
-  
+
 }
 
 
