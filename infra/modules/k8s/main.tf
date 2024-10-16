@@ -281,7 +281,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
             service {
               name = kubernetes_service.node_app.metadata.0.name
               port {
-                number = 80
+                number = kubernetes_service.node_app.spec.0.port.0.port
               }
             }
           }
@@ -293,7 +293,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
             service {
               name = kubernetes_service.react_app.metadata.0.name
               port {
-                number = 80
+                number = kubernetes_service.react_app.spec.0.port.0.port
               }
             }
           }
