@@ -67,10 +67,10 @@ resource "kubernetes_service" "react_app" {
       app = "react-app"
     }
     port {
-      port        = 3000
+      port        = 80
       target_port = 3000
     }
-    type = "NodePort"
+    type = "ClusterIP"
   }
 }
 
@@ -130,10 +130,10 @@ resource "kubernetes_service" "node_app" {
       app = "node-app"
     }
     port {
-      port        = 5000
+      port        = 80
       target_port = 5000
     }
-    type = "NodePort"
+    type = "ClusterIP"
   }
 }
 
@@ -254,7 +254,7 @@ resource "helm_release" "alb-controller" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.us-west-1.amazonaws.com/amazon/aws-load-balancer-controller"
+    value = "602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-load-balancer-controller"
   }
 
 }
@@ -274,7 +274,6 @@ resource "kubernetes_ingress_v1" "app_ingress" {
 
   spec {
     rule {
-      host = "rubblestech.com" # Replace with your domain
       http {
         path {
           path = "/api/*"
@@ -282,7 +281,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
             service {
               name = kubernetes_service.node_app.metadata.0.name
               port {
-                number = kubernetes_service.node_app.spec.0.port.0.port
+                number = 80
               }
             }
           }
@@ -294,7 +293,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
             service {
               name = kubernetes_service.react_app.metadata.0.name
               port {
-                number = kubernetes_service.react_app.spec.0.port.0.port
+                number = 80
               }
             }
           }
