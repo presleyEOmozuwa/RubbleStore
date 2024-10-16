@@ -276,7 +276,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     rule {
       http {
         path {
-          path = "/api/*"
+          path = "/api"
           backend {
             service {
               name = kubernetes_service.node_app.metadata.0.name
@@ -288,7 +288,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
         }
 
         path {
-          path = "/*"
+          path = "/"
           backend {
             service {
               name = kubernetes_service.react_app.metadata.0.name
