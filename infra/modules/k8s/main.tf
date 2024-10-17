@@ -67,7 +67,7 @@ resource "kubernetes_service" "react_app" {
       app = "react-app"
     }
     port {
-      port        = 80
+      port        = 3000
       target_port = 3000
     }
     type = "NodePort"
@@ -130,7 +130,7 @@ resource "kubernetes_service" "node_app" {
       app = "node-app"
     }
     port {
-      port        = 80
+      port        = 5000
       target_port = 5000
     }
     type = "NodePort"
@@ -276,7 +276,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     rule {
       http {
         path {
-          path = "/api"
+          path = "/api/*"
           backend {
             service {
               name = kubernetes_service.node_app.metadata.0.name
@@ -288,7 +288,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
         }
 
         path {
-          path = "/"
+          path = "/*"
           backend {
             service {
               name = kubernetes_service.react_app.metadata.0.name
