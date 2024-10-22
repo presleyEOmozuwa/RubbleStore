@@ -51,3 +51,4 @@ module "k8s" {
   imgUrl_node = module.eks.ecr_node_repo
   oidc_url = module.eks.oidc_url
 }
+

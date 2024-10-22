@@ -2,12 +2,20 @@ data "aws_eks_cluster_auth" "ekscluster" {
   name = "ekscluster"
 }
 
+data "aws_eks_cluster" "ekscluster" {
+  name = "ekscluster"
+}
 
 // SET UP KUBERNETES
 provider "kubernetes" {
   host                   = var.eks_cluster_host
-  token                  = data.aws_eks_cluster_auth.ekscluster.token
   cluster_ca_certificate = base64decode(var.eks_cluster_ca)
+  exec {
+    api_version = "client.authentication.k8s.io/v1beta1"
+    args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.ekscluster.name]
+    command     = "aws"
+  }
+
 }
 
 # REACT APP RESOURCE
@@ -70,7 +78,7 @@ resource "kubernetes_service" "react_app" {
       port        = 3000
       target_port = 3000
     }
-    type = "NodePort"
+    type = "ClusterIP"
   }
 }
 
@@ -133,7 +141,7 @@ resource "kubernetes_service" "node_app" {
       port        = 5000
       target_port = 5000
     }
-    type = "NodePort"
+    type = "ClusterIP"
   }
 }
 
@@ -169,7 +177,7 @@ resource "aws_iam_role" "alb_controller_role" {
   assume_role_policy = data.aws_iam_policy_document.alb_controller_assume_role_policy.json
 }
 
-resource "aws_iam_role_policy_attachment" "alb_controller_policy_attachment" {
+resource "aws_iam_role_policy_attachment" "alb_controller_policy_attach" {
   role       = aws_iam_role.alb_controller_role.name
   policy_arn = "arn:aws:iam::${var.owner_id}:policy/AWSLoadBalancerControllerIAMPolicy"
 }
@@ -187,7 +195,7 @@ resource "kubernetes_service_account" "alb_controller" {
     annotations = {
       "meta.helm.sh/release-name"      = "aws-load-balancer-controller"
       "meta.helm.sh/release-namespace" = "kube-system"
-      "eks.amazonaws.com/role-arn" = aws_iam_role.alb_controller_role.arn
+      "eks.amazonaws.com/role-arn"     = aws_iam_role.alb_controller_role.arn
     }
   }
 }
@@ -198,8 +206,12 @@ resource "kubernetes_service_account" "alb_controller" {
 provider "helm" {
   kubernetes {
     host                   = var.eks_cluster_host
-    token                  = data.aws_eks_cluster_auth.ekscluster.token
     cluster_ca_certificate = base64decode(var.eks_cluster_ca)
+    exec {
+      api_version = "client.authentication.k8s.io/v1beta1"
+      args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.ekscluster.name]
+      command     = "aws"
+    }
   }
 }
 
@@ -220,6 +232,11 @@ resource "helm_release" "alb-controller" {
   set {
     name  = "serviceAccount.name"
     value = "alb-controller"
+  }
+
+  set {
+    name  = "serviceAccount.create"
+    value = "false"
   }
 
   set {
@@ -254,7 +271,7 @@ resource "helm_release" "alb-controller" {
 
   set {
     name  = "image.repository"
-    value = "602401143452.dkr.ecr.us-west-2.amazonaws.com/amazon/aws-load-balancer-controller"
+    value = "602401143452.dkr.ecr.us-east-1.amazonaws.com/amazon/aws-load-balancer-controller"
   }
 
 }
@@ -266,7 +283,8 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     name      = "app-ingress"
     namespace = "default"
     annotations = {
-      "kubernetes.io/ingress.class": "alb"
+      "kubernetes.io/ingress.class" : "alb"
+      "alb.ingress.kubernetes.io/target-type" : "ip"
       "alb.ingress.kubernetes.io/scheme"       = "internet-facing"
       "alb.ingress.kubernetes.io/listen-ports" = jsonencode([{ "HTTP" : 80 }, { "HTTPS" : 443 }])
     }
@@ -276,7 +294,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     rule {
       http {
         path {
-          path = "/api/*"
+          path = "/api"
           backend {
             service {
               name = kubernetes_service.node_app.metadata.0.name
@@ -288,7 +306,7 @@ resource "kubernetes_ingress_v1" "app_ingress" {
         }
 
         path {
-          path = "/*"
+          path = "/"
           backend {
             service {
               name = kubernetes_service.react_app.metadata.0.name
