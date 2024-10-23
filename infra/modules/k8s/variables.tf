@@ -32,6 +32,10 @@ variable "eks_cluster_host" {
    type = string
 }
 
+variable "eks_cluster_identifier" {
+   type = string
+}
+
 variable "imgUrl_react" {
    type = string
 }

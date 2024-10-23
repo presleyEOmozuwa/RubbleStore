@@ -18,13 +18,6 @@ module "vpc" {
   rt_tags = {
     Name = "rubbles-rt"
   }
-   
-  public_subnet_tags_1 = {
-    Name = "public-subnet_1"
-  }
-   public_subnet_tags_2 = {
-    Name = "public-subnet_2"
-  }
   
 }
 
@@ -47,6 +40,7 @@ module "k8s" {
   security_groups = module.vpc.security_groups
   eks_cluster_ca = module.eks.eks_cluster_ca
   eks_cluster_host = module.eks.eks_cluster_host
+  eks_cluster_identifier = module.eks.eks_cluster_identifier
   imgUrl_react = module.eks.ecr_react_repo
   imgUrl_node = module.eks.ecr_node_repo
   oidc_url = module.eks.oidc_url

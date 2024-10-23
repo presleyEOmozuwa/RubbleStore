@@ -2,17 +2,13 @@ data "aws_eks_cluster_auth" "ekscluster" {
   name = "ekscluster"
 }
 
-data "aws_eks_cluster" "ekscluster" {
-  name = "ekscluster"
-}
-
 // SET UP KUBERNETES
 provider "kubernetes" {
   host                   = var.eks_cluster_host
   cluster_ca_certificate = base64decode(var.eks_cluster_ca)
   exec {
     api_version = "client.authentication.k8s.io/v1beta1"
-    args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.ekscluster.name]
+    args        = ["eks", "get-token", "--cluster-name", var.eks_cluster_identifier]
     command     = "aws"
   }
 
@@ -209,7 +205,7 @@ provider "helm" {
     cluster_ca_certificate = base64decode(var.eks_cluster_ca)
     exec {
       api_version = "client.authentication.k8s.io/v1beta1"
-      args        = ["eks", "get-token", "--cluster-name", data.aws_eks_cluster.ekscluster.name]
+      args        = ["eks", "get-token", "--cluster-name", var.eks_cluster_identifier]
       command     = "aws"
     }
   }
@@ -222,6 +218,7 @@ resource "helm_release" "alb-controller" {
   chart      = "aws-load-balancer-controller"
   repository = "https://aws.github.io/eks-charts"
   namespace  = "kube-system"
+  version    = "1.4.7"
   timeout    = 600
 
   set {
@@ -294,24 +291,24 @@ resource "kubernetes_ingress_v1" "app_ingress" {
     rule {
       http {
         path {
-          path = "/api"
-          backend {
-            service {
-              name = kubernetes_service.node_app.metadata.0.name
-              port {
-                number = kubernetes_service.node_app.spec.0.port.0.port
-              }
-            }
-          }
-        }
-
-        path {
           path = "/"
           backend {
             service {
               name = kubernetes_service.react_app.metadata.0.name
               port {
                 number = kubernetes_service.react_app.spec.0.port.0.port
+              }
+            }
+          }
+        }
+
+        path {
+          path = "/api"
+          backend {
+            service {
+              name = kubernetes_service.node_app.metadata.0.name
+              port {
+                number = kubernetes_service.node_app.spec.0.port.0.port
               }
             }
           }
